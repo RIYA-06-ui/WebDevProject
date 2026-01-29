@@ -355,21 +355,6 @@ function importData() {
     importFile.click();
 }
 
-importFile.addEventListener('change', e => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-        const data = JSON.parse(ev.target.result);
-        appState.transactions = data.transactions || [];
-        appState.budget = data.budget || 0;
-        saveState();
-        renderAll();
-    };
-    reader.readAsText(file);
-    importFile.value = '';
-});
-
 // ========== Init ==========
 function renderAll() {
     renderStats();
@@ -388,9 +373,18 @@ document.addEventListener('DOMContentLoaded', () => {
     window.budgetInput = document.getElementById('budgetInput');
     window.importFile = document.getElementById('importFile');
 
+    // Define missing DOM element variables
+    const filterType = document.getElementById('filterType');
+    const sortBy = document.getElementById('sortBy');
+    const clearData = document.getElementById('clearData');
+    const setBudgetBtn = document.getElementById('setBudget');
+    const exportDataBtn = document.getElementById('exportData');
+    const importDataBtn = document.getElementById('importData');
+
     loadState();
     renderAll();
 
+    // Form and filter event listeners
     transactionForm.addEventListener('submit', addTransaction);
     filterType.addEventListener('change', renderTransactions);
     sortBy.addEventListener('change', renderTransactions);
@@ -398,6 +392,42 @@ document.addEventListener('DOMContentLoaded', () => {
     setBudgetBtn.addEventListener('click', setBudget);
     exportDataBtn.addEventListener('click', exportData);
     importDataBtn.addEventListener('click', importData);
+
+    // Import file handler
+    importFile.addEventListener('change', e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+            try {
+                const data = JSON.parse(ev.target.result);
+                appState.transactions = data.transactions || [];
+                appState.budget = data.budget || 0;
+                saveState();
+                renderAll();
+                showAlert('Data imported successfully!', 'success');
+            } catch (error) {
+                showAlert('Error importing data', 'error');
+            }
+        };
+        reader.readAsText(file);
+        importFile.value = '';
+    });
+
+    // Report modal event listeners
+    document.getElementById('generateReport').addEventListener('click', generateReport);
+    document.getElementById('printReport').addEventListener('click', printReport);
+    document.getElementById('closeReport').addEventListener('click', () => {
+        document.getElementById('reportModal').classList.remove('active');
+    });
+    document.getElementById('closeReportBtn').addEventListener('click', () => {
+        document.getElementById('reportModal').classList.remove('active');
+    });
+    document.getElementById('reportModal').addEventListener('click', (e) => {
+        if (e.target.id === 'reportModal') {
+            document.getElementById('reportModal').classList.remove('active');
+        }
+    });
 });
 
 // ========== Report Generation ==========
@@ -492,18 +522,3 @@ function printReport() {
     printWindow.document.close();
     printWindow.print();
 }
-
-// ========== Event Listeners ==========
-document.getElementById('generateReport').addEventListener('click', generateReport);
-document.getElementById('printReport').addEventListener('click', printReport);
-document.getElementById('closeReport').addEventListener('click', () => {
-    document.getElementById('reportModal').classList.remove('active');
-});
-document.getElementById('closeReportBtn').addEventListener('click', () => {
-    document.getElementById('reportModal').classList.remove('active');
-});
-document.getElementById('reportModal').addEventListener('click', (e) => {
-    if (e.target.id === 'reportModal') {
-        document.getElementById('reportModal').classList.remove('active');
-    }
-});
